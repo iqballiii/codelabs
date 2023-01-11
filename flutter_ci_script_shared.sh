@@ -3,10 +3,19 @@ function ci_codelabs () {
     shift
 
     # plugin_codelab is a special case since it's a plugin.  Analysis doesn't seem to be working.
-    pushd $PWD
-    echo "== TESTING plugin_codelab on $channel"
-    cd ./plugin_codelab
-    dart format --output none --set-exit-if-changed .;
+    pushd plugin_codelab
+        echo "== TESTING plugin_codelab on $channel"
+        dart format --output none --set-exit-if-changed .;
+    popd
+
+    # ffigen_codelab/step_07 needs to build the native library before running the tests
+    pushd ffigen_codelab/step_07/example
+        # RUNNER_OS from https://stackoverflow.com/a/72926104/2142626
+        if [ $RUNNER_OS = 'Linux' ]; then
+            sudo apt install ninja-build
+            sudo apt install libgtk-3-dev
+        fi
+        flutter build `echo $RUNNER_OS | tr '[:upper:]' '[:lower:]'` --debug
     popd
 
     local arr=("$@")
@@ -14,14 +23,14 @@ function ci_codelabs () {
     do
         echo "== Testing '${CODELAB}' on $channel"
         declare -a PROJECT_PATHS=($(
-        find $CODELAB -not -path './flutter/*' -not -path './plugin_codelab/pubspec.yaml' -name pubspec.yaml -exec dirname {} \; | sort
+        find $CODELAB -not -path './flutter/*' -not -path './plugin_codelab/pubspec.yaml' -not -path '*/*symlinks/*' -name pubspec.yaml -exec dirname {} \; | sort
         ))
         for PROJECT in "${PROJECT_PATHS[@]}"
         do
             pushd "${PROJECT}"
 
             echo "== Getting dependencies for ${PROJECT}"
-            for dir in `find . -name pubspec.yaml -exec dirname {} \;`; do
+            for dir in `find . -name pubspec.yaml  -not -path '*/*symlinks/*' -exec dirname {} \;`; do
                 pushd $dir
                 flutter pub get
                 popd

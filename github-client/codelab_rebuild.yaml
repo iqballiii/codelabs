@@ -212,6 +212,15 @@ steps:
            
            namespace window_to_front {
            
+          @@ -23,7 +33,7 @@ void WindowToFrontPlugin::RegisterWithRegistrar(
+                     registrar->messenger(), "window_to_front",
+                     &flutter::StandardMethodCodec::GetInstance());
+           
+          -  auto plugin = std::make_unique<WindowToFrontPlugin>();
+          +  auto plugin = std::make_unique<WindowToFrontPlugin>(registrar);
+           
+             channel->SetMethodCallHandler(
+                 [plugin_pointer = plugin.get()](const auto &call, auto result) {
           @@ -33,24 +43,29 @@ void WindowToFrontPlugin::RegisterWithRegistrar(
              registrar->AddPlugin(std::move(plugin));
            }
@@ -311,15 +320,6 @@ steps:
            import 'package:plugin_platform_interface/plugin_platform_interface.dart';
            
            import 'window_to_front_method_channel.dart';
-          @@ -14,7 +28,7 @@ abstract class WindowToFrontPlatform extends PlatformInterface {
-             ///
-             /// Defaults to [MethodChannelWindowToFront].
-             static WindowToFrontPlatform get instance => _instance;
-          -  
-          +
-             /// Platform-specific implementations should set this with their own
-             /// platform-specific class that extends [WindowToFrontPlatform] when
-             /// they register themselves.
           @@ -23,7 +37,7 @@ abstract class WindowToFrontPlatform extends PlatformInterface {
                _instance = instance;
              }
@@ -382,7 +382,6 @@ steps:
         path: github_client/analysis_options.yaml
         replace-contents: |
           include: ../../analysis_options.yaml
-
       - name: Remove the README.md.
         rm: github_client/README.md
       - name: Remove the iOS, Android and Web runners
@@ -432,24 +431,6 @@ steps:
            import 'package:flutter/material.dart';
            
            void main() {
-          @@ -5,7 +19,7 @@ void main() {
-           }
-           
-           class MyApp extends StatelessWidget {
-          -  const MyApp({Key? key}) : super(key: key);
-          +  const MyApp({super.key});
-           
-             // This widget is the root of your application.
-             @override
-          @@ -30,7 +44,7 @@ class MyApp extends StatelessWidget {
-           }
-           
-           class MyHomePage extends StatefulWidget {
-          -  const MyHomePage({Key? key, required this.title}) : super(key: key);
-          +  const MyHomePage({super.key, required this.title});
-           
-             // This widget is the home page of your application. It is stateful, meaning
-             // that it has a State object (defined below) that contains fields that affect
       - name: Patch test/widget_test.dart
         path: github_client/test/widget_test.dart
         patch-u: |
@@ -471,15 +452,9 @@ steps:
     steps:
       - name: Remove generated code.
         rmdir: step_04
-      - name: Add http
+      - name: Add http oauth2 url_launcher
         path: github_client
-        flutter: pub add http
-      - name: Add oauth2
-        path: github_client
-        flutter: pub add oauth2
-      - name: Add url_launcher
-        path: github_client
-        flutter: pub add url_launcher
+        flutter: pub add http oauth2 url_launcher
       - name: Replace lib/main.dart
         path: github_client/lib/main.dart
         replace-contents: |
@@ -765,8 +740,17 @@ steps:
             });
           }
       - name: Build macOS app
+        platforms: [ macos ]
         path: github_client
         flutter: build macos
+      - name: Build linux app
+        platforms: [ linux ]
+        path: github_client
+        flutter: build linux
+      - name: Build windows app
+        platforms: [ windows ]
+        path: github_client
+        flutter: build windows
       - name: Copy step_04
         copydir:
           from: github_client
@@ -828,9 +812,6 @@ steps:
       - name: Add dependencies
         path: github_client
         flutter: pub add --path ../window_to_front window_to_front
-      - name: Build macOS app
-        path: github_client
-        flutter: build macos
       - name: Patch lib/main.dart
         path: github_client/lib/main.dart
         patch: |
@@ -856,6 +837,18 @@ steps:
                     return FutureBuilder<CurrentUser>(
                       future: viewerDetail(httpClient.credentials.accessToken),
                       builder: (context, snapshot) {
+      - name: Build macOS app
+        platforms: [ macos ]
+        path: github_client
+        flutter: build macos
+      - name: Build linux app
+        platforms: [ linux ]
+        path: github_client
+        flutter: build linux
+      - name: Build windows app
+        platforms: [ windows ]
+        path: github_client
+        flutter: build windows
       - name: Copy step_06
         copydir:
           from: github_client
@@ -883,23 +876,23 @@ steps:
           // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
           // See the License for the specific language governing permissions and
           // limitations under the License.
-
+          
           import 'package:flutter/material.dart';
           import 'package:fluttericon/octicons_icons.dart';
           import 'package:github/github.dart';
           import 'package:url_launcher/url_launcher_string.dart';
-
+          
           class GitHubSummary extends StatefulWidget {
             const GitHubSummary({required this.gitHub, super.key});
             final GitHub gitHub;
-
+          
             @override
             State<GitHubSummary> createState() => _GitHubSummaryState();
           }
-
+          
           class _GitHubSummaryState extends State<GitHubSummary> {
             int _selectedIndex = 0;
-
+          
             @override
             Widget build(BuildContext context) {
               return Row(
@@ -943,24 +936,24 @@ steps:
               );
             }
           }
-
+          
           class RepositoriesList extends StatefulWidget {
             const RepositoriesList({required this.gitHub, super.key});
             final GitHub gitHub;
-
+          
             @override
             State<RepositoriesList> createState() => _RepositoriesListState();
           }
-
+          
           class _RepositoriesListState extends State<RepositoriesList> {
             @override
             initState() {
               super.initState();
               _repositories = widget.gitHub.repositories.listRepositories().toList();
             }
-
+          
             late Future<List<Repository>> _repositories;
-
+          
             @override
             Widget build(BuildContext context) {
               return FutureBuilder<List<Repository>>(
@@ -976,12 +969,12 @@ steps:
                   return ListView.builder(
                     primary: false,
                     itemBuilder: (context, index) {
-                      var repository = repositories![index];
+                      var repository = repositories[index];
                       return ListTile(
                         title:
                             Text('${repository.owner?.login ?? ''}/${repository.name}'),
                         subtitle: Text(repository.description),
-                        onTap: () => _launchUrl(context, repository.htmlUrl),
+                        onTap: () => _launchUrl(this, repository.htmlUrl),
                       );
                     },
                     itemCount: repositories!.length,
@@ -990,24 +983,24 @@ steps:
               );
             }
           }
-
+          
           class AssignedIssuesList extends StatefulWidget {
             const AssignedIssuesList({required this.gitHub, super.key});
             final GitHub gitHub;
-
+          
             @override
             State<AssignedIssuesList> createState() => _AssignedIssuesListState();
           }
-
+          
           class _AssignedIssuesListState extends State<AssignedIssuesList> {
             @override
             initState() {
               super.initState();
               _assignedIssues = widget.gitHub.issues.listByUser().toList();
             }
-
+          
             late Future<List<Issue>> _assignedIssues;
-
+          
             @override
             Widget build(BuildContext context) {
               return FutureBuilder<List<Issue>>(
@@ -1023,13 +1016,13 @@ steps:
                   return ListView.builder(
                     primary: false,
                     itemBuilder: (context, index) {
-                      var assignedIssue = assignedIssues![index];
+                      var assignedIssue = assignedIssues[index];
                       return ListTile(
                         title: Text(assignedIssue.title),
                         subtitle: Text('${_nameWithOwner(assignedIssue)} '
                             'Issue #${assignedIssue.number} '
                             'opened by ${assignedIssue.user?.login ?? ''}'),
-                        onTap: () => _launchUrl(context, assignedIssue.htmlUrl),
+                        onTap: () => _launchUrl(this, assignedIssue.htmlUrl),
                       );
                     },
                     itemCount: assignedIssues!.length,
@@ -1037,21 +1030,21 @@ steps:
                 },
               );
             }
-
+          
             String _nameWithOwner(Issue assignedIssue) {
               final endIndex = assignedIssue.url.lastIndexOf('/issues/');
               return assignedIssue.url.substring(29, endIndex);
             }
           }
-
+          
           class PullRequestsList extends StatefulWidget {
             const PullRequestsList({required this.gitHub, super.key});
             final GitHub gitHub;
-
+          
             @override
             State<PullRequestsList> createState() => _PullRequestsListState();
           }
-
+          
           class _PullRequestsListState extends State<PullRequestsList> {
             @override
             initState() {
@@ -1060,9 +1053,9 @@ steps:
                   .list(RepositorySlug('flutter', 'flutter'))
                   .toList();
             }
-
+          
             late Future<List<PullRequest>> _pullRequests;
-
+          
             @override
             Widget build(BuildContext context) {
               return FutureBuilder<List<PullRequest>>(
@@ -1078,14 +1071,14 @@ steps:
                   return ListView.builder(
                     primary: false,
                     itemBuilder: (context, index) {
-                      var pullRequest = pullRequests![index];
+                      var pullRequest = pullRequests[index];
                       return ListTile(
                         title: Text(pullRequest.title ?? ''),
                         subtitle: Text('flutter/flutter '
                             'PR #${pullRequest.number} '
                             'opened by ${pullRequest.user?.login ?? ''} '
                             '(${pullRequest.state?.toLowerCase() ?? ''})'),
-                        onTap: () => _launchUrl(context, pullRequest.htmlUrl ?? ''),
+                        onTap: () => _launchUrl(this, pullRequest.htmlUrl ?? ''),
                       );
                     },
                     itemCount: pullRequests!.length,
@@ -1094,26 +1087,28 @@ steps:
               );
             }
           }
-
-          Future<void> _launchUrl(BuildContext context, String url) async {
+          
+          Future<void> _launchUrl(State state, String url) async {
             if (await canLaunchUrlString(url)) {
               await launchUrlString(url);
             } else {
-              return showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Navigation error'),
-                  content: Text('Could not launch $url'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Close'),
-                    ),
-                  ],
-                ),
-              );
+              if (state.mounted) {
+                return showDialog(
+                  context: state.context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Navigation error'),
+                    content: Text('Could not launch $url'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              }
             }
           }
       - name: Patch lib/main.dart
@@ -1153,6 +1148,21 @@ steps:
           ---
           > GitHub _getGitHub(String accessToken) {
           >   return GitHub(auth: Authentication.withToken(accessToken));
+      - name: flutter clean
+        path: github_client
+        flutter: clean
+      - name: Build macOS app
+        platforms: [ macos ]
+        path: github_client
+        flutter: build macos
+      - name: Build linux app
+        platforms: [ linux ]
+        path: github_client
+        flutter: build linux
+      - name: Build windows app
+        platforms: [ windows ]
+        path: github_client
+        flutter: build windows
       - name: Copy step_07
         copydir:
           from: github_client

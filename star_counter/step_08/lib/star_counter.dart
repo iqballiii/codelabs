@@ -1,3 +1,7 @@
+// Copyright 2022 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:flutter/material.dart';
 import 'package:github/github.dart';
 import 'package:intl/intl.dart' as intl;
@@ -71,8 +75,8 @@ class _GitHubStarCounterState extends State<GitHubStarCounter> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final textStyle = textTheme.headline4?.apply(color: Colors.green);
-    final errorStyle = textTheme.bodyText1?.apply(color: Colors.red);
+    final textStyle = textTheme.headlineMedium?.apply(color: Colors.green);
+    final errorStyle = textTheme.bodyLarge?.apply(color: Colors.red);
     final numberFormat = intl.NumberFormat.decimalPattern();
 
     if (errorMessage != null) {

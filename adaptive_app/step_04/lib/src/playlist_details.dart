@@ -1,3 +1,7 @@
+// Copyright 2022 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:flutter/material.dart';
 import 'package:googleapis/youtube/v3.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +70,10 @@ class _PlaylistDetailsListView extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.transparent, Theme.of(context).backgroundColor],
+            colors: [
+              Colors.transparent,
+              Theme.of(context).colorScheme.background
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: const [0.5, 0.95],
@@ -88,7 +95,7 @@ class _PlaylistDetailsListView extends StatelessWidget {
         children: [
           Text(
             playlistItem.snippet!.title!,
-            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   fontSize: 18,
                   // fontWeight: FontWeight.bold,
                 ),
@@ -96,7 +103,7 @@ class _PlaylistDetailsListView extends StatelessWidget {
           if (playlistItem.snippet!.videoOwnerChannelTitle != null)
             Text(
               playlistItem.snippet!.videoOwnerChannelTitle!,
-              style: Theme.of(context).textTheme.bodyText2!.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 12,
                   ),
             ),

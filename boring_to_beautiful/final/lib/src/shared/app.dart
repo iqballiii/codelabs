@@ -1,3 +1,7 @@
+// Copyright 2022 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'playback/bloc/bloc.dart';
 import 'providers/theme.dart';
 import 'router.dart';
+import 'views/views.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -46,6 +51,9 @@ class _MyAppState extends State<MyApp> {
                     routeInformationProvider:
                         appRouter.routeInformationProvider,
                     routerDelegate: appRouter.routerDelegate,
+                    builder: (context, child) {
+                      return PlayPauseListener(child: child!);
+                    },
                   );
                 },
               ),

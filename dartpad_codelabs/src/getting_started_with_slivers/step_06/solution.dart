@@ -5,7 +5,7 @@ void main() {
 }
 
 class HorizonsApp extends StatelessWidget {
-  const HorizonsApp({Key? key}) : super(key: key);
+  const HorizonsApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -56,7 +56,7 @@ class HorizonsApp extends StatelessWidget {
 }
 
 class WeeklyForecastList extends StatelessWidget {
-  const WeeklyForecastList({Key? key}) : super(key: key);
+  const WeeklyForecastList({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +95,7 @@ class WeeklyForecastList extends StatelessWidget {
                       Center(
                         child: Text(
                           dailyForecast.getDate(currentDate.day).toString(),
-                          style: textTheme.headline2,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                     ],
@@ -109,7 +109,7 @@ class WeeklyForecastList extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           dailyForecast.getWeekday(currentDate.weekday),
-                          style: textTheme.headline4,
+                          style: textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 10.0),
                         Text(dailyForecast.description),
@@ -121,7 +121,7 @@ class WeeklyForecastList extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     '${dailyForecast.highTemp} | ${dailyForecast.lowTemp} F',
-                    style: textTheme.subtitle1,
+                    style: textTheme.titleMedium,
                   ),
                 ),
               ],
