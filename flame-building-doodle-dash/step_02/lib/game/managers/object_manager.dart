@@ -24,7 +24,65 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
   final probGen = ProbabilityGenerator();
   final double _tallestPlatformHeight = 50;
   final List<Platform> _platforms = [];
+  final List<EnemyPlatform> _enemies = [];
+  final List<PowerUp> _powerups = []; // Add lines from here...
 
+  void _maybeAddPowerup() {
+    if (specialPlatforms['noogler'] == true &&
+        probGen.generateWithProbability(20)) {
+      var nooglerHat = NooglerHat(
+        position: Vector2(_generateNextX(75), _generateNextY()),
+      );
+      add(nooglerHat);
+      _powerups.add(nooglerHat);
+    } else if (specialPlatforms['rocket'] == true &&
+        probGen.generateWithProbability(15)) {
+      var rocket = Rocket(
+        position: Vector2(_generateNextX(50), _generateNextY()),
+      );
+      add(rocket);
+      _powerups.add(rocket);
+    }
+
+    _cleanupPowerups();
+  }
+
+  void _cleanupPowerups() {
+    final screenBottom = gameRef.player.position.y +
+        (gameRef.size.x / 2) +
+        gameRef.screenBufferSpace;
+    while (_powerups.isNotEmpty && _powerups.first.position.y > screenBottom) {
+      if (_powerups.first.parent != null) {
+        remove(_powerups.first);
+      }
+      _powerups.removeAt(0);
+    }
+  }
+
+  void _maybeAddEnemy() {
+    if (specialPlatforms['enemy'] != true) {
+      return;
+    }
+    if (probGen.generateWithProbability(20)) {
+      var enemy = EnemyPlatform(
+        position: Vector2(_generateNextX(100), _generateNextY()),
+      );
+      add(enemy);
+      _enemies.add(enemy);
+      _cleanupEnemies();
+    }
+  }
+
+  void _cleanupEnemies() {
+    final screenBottom = gameRef.player.position.y +
+        (gameRef.size.x / 2) +
+        gameRef.screenBufferSpace;
+
+    while (_enemies.isNotEmpty && _enemies.first.position.y > screenBottom) {
+      remove(_enemies.first);
+      _enemies.removeAt(0);
+    }
+  }
   // Add Platforms: Add onMount method
 
   // Add Platforms: Add update method
@@ -48,6 +106,23 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
   }
 
   void enableLevelSpecialty(int level) {
+    switch (level) {
+      case 1:
+        enableSpecialty('spring');
+        break;
+      case 2:
+        enableSpecialty('broken');
+        break;
+      case 3:
+        enableSpecialty('noogler');
+        break;
+      case 4:
+        enableSpecialty('rocket');
+        break;
+      case 5:
+        enableSpecialty('enemy');
+        break;
+    }
     // More on Platforms: Add switch statement to enable SpringBoard for
     // level 1 and BrokenPlatform for level 2
   }
@@ -98,8 +173,76 @@ class ObjectManager extends Component with HasGameRef<DoodleDash> {
 
     return currentHighestPlatformY - distanceToNextY;
   }
-
   // Add platforms: Add _semiRandomPlatform method
+
+  Platform _semiRandomPlatform(Vector2 position) {
+    if (specialPlatforms['spring'] == true &&
+        probGen.generateWithProbability(15)) {
+      return SpringBoard(position: position);
+    }
+
+    if (specialPlatforms['broken'] == true &&
+        probGen.generateWithProbability(10)) {
+      return BrokenPlatform(position: position);
+    }
+    return NormalPlatform(position: position);
+  }
+
+  @override // Add lines from here...
+  void update(double dt) {
+    final topOfLowestPlatform =
+        _platforms.first.position.y + _tallestPlatformHeight;
+
+    final screenBottom = gameRef.player.position.y +
+        (gameRef.size.x / 2) +
+        gameRef.screenBufferSpace;
+
+    if (topOfLowestPlatform > screenBottom) {
+      var newPlatY = _generateNextY();
+      var newPlatX = _generateNextX(100);
+      final nextPlat = _semiRandomPlatform(Vector2(newPlatX, newPlatY));
+      add(nextPlat);
+
+      _platforms.add(nextPlat);
+
+      gameRef.gameManager.increaseScore();
+
+      _cleanupPlatforms();
+      // Losing the game: Add call to _maybeAddEnemy()
+      _maybeAddEnemy();
+      // Powerups: Add call to _maybeAddPowerup();
+      _maybeAddPowerup();
+    }
+
+    super.update(dt);
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
+
+    var currentX = (gameRef.size.x.floor() / 2).toDouble() - 50;
+
+    var currentY =
+        gameRef.size.y - (_rand.nextInt(gameRef.size.y.floor()) / 3) - 50;
+
+    for (var i = 0; i < 9; i++) {
+      if (i != 0) {
+        currentX = _generateNextX(100);
+        currentY = _generateNextY();
+      }
+      _platforms.add(
+        _semiRandomPlatform(
+          Vector2(
+            currentX,
+            currentY,
+          ),
+        ),
+      );
+
+      add(_platforms[i]);
+    }
+  }
 
   // Losing the game: Add enemy code
 

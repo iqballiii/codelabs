@@ -5,7 +5,7 @@
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
-
+import 'sprites/sprites.dart';
 import './world.dart';
 import 'managers/managers.dart';
 // Add a Player to the game: import Sprites
@@ -22,6 +22,7 @@ class DoodleDash extends FlameGame
   int screenBufferSpace = 300;
   ObjectManager objectManager = ObjectManager();
 
+  late Player player;
   // Add a Player to the game: Create a Player variable
 
   @override
@@ -40,7 +41,10 @@ class DoodleDash extends FlameGame
     super.update(dt);
 
     // Losing the game: Add isGameOver check
-
+    if (gameManager.isGameOver) {
+      // Add lines from here...
+      return;
+    }
     if (gameManager.isIntro) {
       overlays.add('mainMenuOverlay');
       return;
@@ -50,9 +54,27 @@ class DoodleDash extends FlameGame
       checkLevelUp();
 
       // Core gameplay: Add camera code to follow Dash during game play
+      final Rect worldBounds = Rect.fromLTRB(
+        0,
+        camera.position.y - screenBufferSpace,
+        camera.gameSize.x,
+        camera.position.y + _world.size.y,
+      );
+      camera.worldBounds = worldBounds;
+
+      if (player.isMovingDown) {
+        camera.worldBounds = worldBounds;
+      }
 
       // Losing the game: Add the first loss condition.
       // Game over if Dash falls off screen!
+      if (player.position.y >
+          camera.position.y +
+              _world.size.y +
+              player.size.y +
+              screenBufferSpace) {
+        onLose();
+      }
     }
   }
 
@@ -62,6 +84,7 @@ class DoodleDash extends FlameGame
   }
 
   void initializeGameStart() {
+    setCharacter();
     // Add a Player to the game: Call setCharacter
 
     gameManager.reset();
@@ -71,9 +94,16 @@ class DoodleDash extends FlameGame
     levelManager.reset();
 
     // Core gameplay: Reset player & camera boundaries
-
+    player.reset();
+    camera.worldBounds = Rect.fromLTRB(
+      0,
+      -_world.size.y,
+      camera.gameSize.x,
+      _world.size.y + screenBufferSpace,
+    );
+    camera.followComponent(player);
     // Add a Player to the game: Reset Dash's position back to the start
-
+    player.resetPosition();
     objectManager = ObjectManager(
         minVerticalDistanceToNextPlatform: levelManager.minDistance,
         maxVerticalDistanceToNextPlatform: levelManager.maxDistance);
@@ -84,6 +114,12 @@ class DoodleDash extends FlameGame
   }
 
   void setCharacter() {
+    player = Player(
+      // Add lines from here...
+      character: gameManager.character,
+      jumpSpeed: levelManager.startingJumpSpeed,
+    );
+    add(player);
     // Add a Player to the game: Initialize character
     // Add a Player to the game: Add player
   }
@@ -95,6 +131,12 @@ class DoodleDash extends FlameGame
   }
 
   // Losing the game: Add an onLose method
+  void onLose() {
+    // Add lines from here...
+    gameManager.state = GameState.gameOver;
+    player.removeFromParent();
+    overlays.add('gameOverOverlay');
+  }
 
   void resetGame() {
     startGame();
@@ -116,6 +158,7 @@ class DoodleDash extends FlameGame
       objectManager.configure(levelManager.level, levelManager.difficulty);
 
       // Core gameplay: Call setJumpSpeed
+      player.setJumpSpeed(levelManager.jumpSpeed);
     }
   }
 }
