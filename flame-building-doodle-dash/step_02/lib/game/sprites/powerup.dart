@@ -11,6 +11,7 @@ abstract class PowerUp extends SpriteComponent
     with HasGameRef<DoodleDash>, CollisionCallbacks {
   final hitbox = RectangleHitbox();
   double get jumpSpeedMultiplier;
+  double get pointsBoost;
 
   PowerUp({
     super.position,
@@ -32,6 +33,8 @@ class Rocket extends PowerUp {
   // Add lines from here...
   @override
   double get jumpSpeedMultiplier => 3.5;
+  @override
+  double get pointsBoost => 0.0;
 
   Rocket({
     super.position,
@@ -50,6 +53,8 @@ class NooglerHat extends PowerUp {
   // Add lines from here...
   @override
   double get jumpSpeedMultiplier => 2.5;
+  @override
+  double get pointsBoost => 0.0;
 
   NooglerHat({
     super.position,
@@ -62,5 +67,26 @@ class NooglerHat extends PowerUp {
     await super.onLoad();
     sprite = await gameRef.loadSprite('game/noogler_hat.png');
     size = Vector2(75, 50);
+  }
+}
+
+// Powerups: Add Points
+class PowerBooster extends PowerUp {
+  @override
+  double get jumpSpeedMultiplier => 1.0;
+  @override
+  double get pointsBoost => 50.0;
+
+  PowerBooster({
+    super.position,
+  });
+
+  final int activeLengthInMs = 1;
+
+  @override
+  Future<void>? onLoad() async {
+    await super.onLoad();
+    sprite = await gameRef.loadSprite('game/power_booster_sprite.png');
+    size = Vector2(70, 50);
   }
 }
